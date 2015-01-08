@@ -2,16 +2,19 @@
 
 /*
 Plugin Name: Render EDD
-Plugin URI: http://URI_Of_Page_Describing_Plugin_and_Updates
-Description: A brief description of the Plugin.
+Description: Integrates Easy Digital Downloads with Render for improved shortcode capabilities.
 Version: 0.1
-Author: kylemaurer
-Author URI: http://URI_Of_The_Plugin_Author
-License: A "Slug" license name e.g. GPL2
+Author: Kyle Maurer
+Author URI: http://renderwp.com
+License: GPLv2 or later
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
 */
 
 require_once( 'includes/helper-functions.php' );
 
+/**
+ * Class Render_EDD
+ */
 class Render_EDD {
 
 	public function __construct() {
@@ -19,6 +22,9 @@ class Render_EDD {
 		add_action( 'plugins_loaded', array( $this, 'render_shortcodes' ) );
 	}
 
+	/**
+	 * Display a notice in the admin if EDD and Render are not both active
+	 */
 	static function notice() {
 		if ( ! class_exists( 'Render' ) || ! class_exists( 'Easy_Digital_Downloads' ) ) {
 			?>
@@ -34,6 +40,9 @@ class Render_EDD {
 		}
 	}
 
+	/**
+	 * Add data and inputs for all EDD shortcodes and pass them through Render's function
+	 */
 	static function render_shortcodes() {
 		$_shortcodes = array(
 			// Download Cart
