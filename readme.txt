@@ -1,11 +1,11 @@
 === Render EDD ===
 
-Contributors: BrashRebel
+Contributors: joelworsham, BrashRebel
 Donate link: http://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=admin%40realbigmarketing%2ecom
 Tags: shortcodes, render, edd, easy digital downloads, ecommerce
 Requires at least: 3.8.0
-Tested up to: 4.1
-Stable tag: 0.1
+Tested up to: 4.1.0
+Stable tag: 0.1.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -33,5 +33,5 @@ Using this plugin is very simple. All you have to do is:
 
 == Changelog ==
 
-= 0.1 =
+= 0.1.0 =
 * Initial version

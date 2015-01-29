@@ -67,7 +67,7 @@ function render_edd_get_downloads() {
 
 	foreach ( $downloads as $download ) {
 
-		if ( $download->ID === $post->ID ) {
+		if ( (int) $download->ID === (int) $post->ID ) {
 			continue;
 		}
 

@@ -724,3 +724,46 @@ class Render_EDD {
 }
 
 $render_edd = new Render_EDD();
+
+/**
+ * TinyMCE callback for the EDD Login Form shortcode.
+ *
+ * Logs out the user before calling the original shortcode callback.
+ *
+ * @since 0.1.0
+ * @access Private
+ *
+ * @param array  $atts    The attributes sent to the shortcode.
+ * @param string $content The content inside the shortcode.
+ * @return string Shortcode output,
+ */
+function edd_login_form_shortcode_tinymce( $atts = array(), $content = '' ) {
+
+	// Log out for displaying this shortcode
+	render_tinyme_log_out();
+
+	$output = edd_login_form_shortcode( $atts, $content );
+	return $output;
+}
+
+/**
+ * TinyMCE callback for the EDD Register Form shortcode.
+ *
+ * Logs out the user before calling the original shortcode callback.
+ *
+ * @since 0.1.0
+ *
+ * @access Private
+ *
+ * @param array  $atts    The attributes sent to the shortcode.
+ * @param string $content The content inside the shortcode.
+ * @return string Shortcode output.
+ */
+function edd_register_form_shortcode_tinymce( $atts = array(), $content = '' ) {
+
+	// Log out for displaying this shortcode
+	render_tinyme_log_out();
+
+	$output = edd_register_form_shortcode( $atts, $content );
+	return $output;
+}
