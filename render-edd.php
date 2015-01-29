@@ -64,8 +64,6 @@ class Render_EDD {
 	 */
 	public function init() {
 
-		global $wp_scripts;
-
 		// Bail if Render isn't loaded
 		if ( ! class_exists( 'Render' ) || ! class_exists( 'Easy_Digital_Downloads' ) ) {
 			add_action( 'admin_notices', array( __CLASS__, 'notice' ) );
@@ -83,9 +81,9 @@ class Render_EDD {
 		load_plugin_textdomain( 'Render_EDD', false, RENDER_EDD_PATH . '/languages' );
 
 		// Add EDD styles to tinymce
-		self::add_edd_style();
+		add_filter( 'render_editor_styles', array( __CLASS__, 'add_edd_style') );
 
-		add_editor_style( RENDER_EDD_URL . "/assets/css/render-edd.css" );
+		add_filter( 'render_editor_styles', array( __CLASS__, 'add_render_edd_style' ) );
 	}
 
 	/**
@@ -106,18 +104,37 @@ class Render_EDD {
 	 * to enqueue the style, grab the stylesheet, and then dequeue it pretty easily.
 	 *
 	 * @since 0.1.0
+	 *
+	 * @param array $styles All stylesheets registered for the TinyMCE through Render.
+	 * @return array The styles.
 	 */
-	private static function add_edd_style() {
+	public static function add_edd_style( $styles ) {
 
 		global $wp_styles;
 
 		edd_register_styles();
 
 		if ( isset( $wp_styles->registered['edd-styles'] ) ) {
-			add_editor_style( $wp_styles->registered['edd-styles']->src );
+			$styles[] = $wp_styles->registered['edd-styles']->src;
 		}
 
 		wp_dequeue_style( 'edd-styles' );
+
+		return $styles;
+	}
+
+	/**
+	 * Adds the Render EDD stylesheet to the TinyMCE through Render.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @param array $styles All stylesheets registered for the TinyMCE through Render.
+	 * @return array The styles.
+	 */
+	public static function add_render_edd_style( $styles ) {
+
+		$styles[] = RENDER_EDD_URL . "/assets/css/render-edd.css";
+		return $styles;
 	}
 
 	/**
@@ -523,7 +540,7 @@ class Render_EDD {
 							'type'        => 'toggle',
 							'properties'  => array(
 								'values' => array(
-									'AND' => __( 'All', 'Render_EDD' ),
+									'AND' => __( 'All', 'Render_EDD' ) . '&nbsp;', // For spacing in the toggle switch
 									'OR'  => __( 'One', 'Render_EDD' ),
 								),
 							),
