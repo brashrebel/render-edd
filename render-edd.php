@@ -7,6 +7,8 @@ Author: Joel Worsham & Kyle Maurer
 Author URI: http://renderwp.com
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: Render_EDD
+Domain Path: /languages/
 */
 
 // Exit if loaded directly
