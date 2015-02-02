@@ -16,6 +16,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	die();
 }
 
+// Licensing
+require_once __DIR__ . '/core/licensing/licensing.php';
+
 // Define all plugin constants.
 
 /**
@@ -96,7 +99,10 @@ class Render_EDD {
 	private function require_files() {
 
 		// Global helper functions.
-		require_once __DIR__ . '/includes/helper-functions.php';
+		require_once __DIR__ . '/core/helper-functions.php';
+
+		// Admin settings
+		require_once __DIR__ . '/core/admin/settings.php';
 	}
 
 	/**
