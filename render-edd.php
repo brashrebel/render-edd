@@ -437,7 +437,6 @@ class Render_EDD {
 						),
 					),
 					'render'      => array(
-						'displayBlock' => true,
 						'noStyle' => true,
 					),
 				),
