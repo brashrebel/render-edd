@@ -16,9 +16,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	die();
 }
 
-// Licensing
-require_once __DIR__ . '/core/licensing/licensing.php';
-
 // Define all plugin constants.
 
 /**
@@ -26,7 +23,7 @@ require_once __DIR__ . '/core/licensing/licensing.php';
  *
  * @since 1.0.0
  */
-define( 'RENDER_EDD_VERSION', '0.1.0' );
+define( 'RENDER_EDD_VERSION', '1.0.0' );
 
 /**
  * The absolute server path to Render's root directory.
@@ -54,6 +51,24 @@ define( 'RENDER_EDD_URL', plugins_url( '', __FILE__ ) );
 class Render_EDD {
 
 	/**
+	 * The reason for deactivation.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @var array
+	 */
+	public $deactivate_reasons = array();
+
+	/**
+	 * The plugin text domain.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @var string
+	 */
+	public static $text_domain = 'Render_EDD';
+
+	/**
 	 * Constructs the plugin.
 	 *
 	 * @since 0.1.0
@@ -70,8 +85,34 @@ class Render_EDD {
 	public function init() {
 
 		// Bail if Render isn't loaded
-		if ( ! class_exists( 'Render' ) || ! class_exists( 'Easy_Digital_Downloads' ) ) {
+		if ( ! defined( 'RENDER_ACTIVE' ) || ! class_exists( 'Easy_Digital_Downloads' ) ) {
 			add_action( 'admin_notices', array( __CLASS__, 'notice' ) );
+
+			return;
+		}
+
+		// Requires Render
+		if ( ! defined( 'RENDER_ACTIVE' ) ) {
+			$this->deactivate_reasons[] = __( 'Render is not active', self::$text_domain );
+		}
+
+		// Requires Project Panorama
+		if ( ! class_exists( 'Easy_Digital_Downloads' ) ) {
+			$this->deactivate_reasons[] = __( 'Easy Digital Downloads is not active', self::$text_domain );
+		}
+
+		// 1.0.3 is when extension integration was introduced
+		if ( defined( 'RENDER_VERSION' ) && version_compare( RENDER_VERSION, '1.0.3', '<' ) ) {
+			$this->deactivate_reasons[] = sprintf(
+				__( 'This plugin requires at least Render version %s. You have version %s installed.', self::$text_domain ),
+				'1.0.3',
+				RENDER_VERSION
+			);
+		}
+
+		// Bail if issues
+		if ( ! empty( $this->deactivate_reasons ) ) {
+			add_action( 'admin_notices', array( $this, 'notice' ) );
 
 			return;
 		}
@@ -87,8 +128,10 @@ class Render_EDD {
 
 		// Add EDD styles to tinymce
 		add_filter( 'render_editor_styles', array( __CLASS__, 'add_edd_style') );
-
 		add_filter( 'render_editor_styles', array( __CLASS__, 'add_render_edd_style' ) );
+
+		// Licensing
+		render_setup_license( 'render_edd', 'Easy Digital Downloads', RENDER_EDD_VERSION, plugin_dir_path( __FILE__ ) );
 	}
 
 	/**
@@ -100,9 +143,6 @@ class Render_EDD {
 
 		// Global helper functions.
 		require_once __DIR__ . '/core/helper-functions.php';
-
-		// Admin settings
-		require_once __DIR__ . '/core/admin/settings.php';
 	}
 
 	/**
@@ -160,8 +200,8 @@ class Render_EDD {
 				array(
 					'code'        => 'download_cart',
 					'function'    => 'edd_cart_shortcode',
-					'title'       => __( 'Download Cart', 'Render_EDD' ),
-					'description' => __( 'Lists items in cart.', 'Render_EDD' ),
+					'title'       => __( 'Download Cart', self::$text_domain ),
+					'description' => __( 'Lists items in cart.', self::$text_domain ),
 					'tags'        => 'cart edd ecommerce downloads digital products',
 					'render'      => array(
 						'displayBlock' => true,
@@ -171,8 +211,8 @@ class Render_EDD {
 				array(
 					'code'        => 'download_checkout',
 					'function'    => 'edd_checkout_form_shortcode',
-					'title'       => __( 'Download Checkout', 'Render_EDD' ),
-					'description' => __( 'Displays the checkout form.', 'Render_EDD' ),
+					'title'       => __( 'Download Checkout', self::$text_domain ),
+					'description' => __( 'Displays the checkout form.', self::$text_domain ),
 					'tags'        => 'cart edd ecommerce downloads digital products form',
 					'render'      => array(
 						'displayBlock' => true,
@@ -182,8 +222,8 @@ class Render_EDD {
 				array(
 					'code'        => 'download_history',
 					'function'    => 'edd_download_history',
-					'title'       => __( 'Download History', 'Render_EDD' ),
-					'description' => __( 'Displays all the products a user has purchased with links to the files.', 'Render_EDD' ),
+					'title'       => __( 'Download History', self::$text_domain ),
+					'description' => __( 'Displays all the products a user has purchased with links to the files.', self::$text_domain ),
 					'tags'        => 'edd ecommerce downloads digital products history files purchase',
 					'render'      => array(
 						'displayBlock' => true,
@@ -193,8 +233,8 @@ class Render_EDD {
 				array(
 					'code'        => 'purchase_history',
 					'function'    => 'edd_purchase_history',
-					'title'       => __( 'Purchase History', 'Render_EDD' ),
-					'description' => __( 'Displays the complete purchase history for a user.', 'Render_EDD' ),
+					'title'       => __( 'Purchase History', self::$text_domain ),
+					'description' => __( 'Displays the complete purchase history for a user.', self::$text_domain ),
 					'tags'        => 'edd ecommerce downloads digital products history purchase',
 					'render'      => array(
 						'displayBlock' => true,
@@ -204,8 +244,8 @@ class Render_EDD {
 				array(
 					'code'        => 'download_discounts',
 					'function'    => 'edd_discounts_shortcode',
-					'title'       => __( 'Download Discounts', 'Render_EDD' ),
-					'description' => __( 'Lists all the currently available discount codes on your site.', 'Render_EDD' ),
+					'title'       => __( 'Download Discounts', self::$text_domain ),
+					'description' => __( 'Lists all the currently available discount codes on your site.', self::$text_domain ),
 					'tags'        => 'edd ecommerce downloads digital products coupon discount code',
 					'render'      => array(
 						'displayBlock' => true,
@@ -215,8 +255,8 @@ class Render_EDD {
 				array(
 					'code'        => 'edd_profile_editor',
 					'function'    => 'edd_profile_editor_shortcode',
-					'title'       => __( 'EDD Profile Editor', 'Render_EDD' ),
-					'description' => __( 'Presents users with a form for updating their profile.', 'Render_EDD' ),
+					'title'       => __( 'EDD Profile Editor', self::$text_domain ),
+					'description' => __( 'Presents users with a form for updating their profile.', self::$text_domain ),
 					'tags'        => 'edd ecommerce downloads digital user profile account',
 					'render'      => array(
 						'displayBlock' => true,
@@ -226,13 +266,13 @@ class Render_EDD {
 				array(
 					'code'        => 'edd_login',
 					'function'    => 'edd_login_form_shortcode',
-					'title'       => __( 'EDD Login', 'Render_EDD' ),
-					'description' => __( 'Displays a simple login form for non-logged in users.', 'Render_EDD' ),
+					'title'       => __( 'EDD Login', self::$text_domain ),
+					'description' => __( 'Displays a simple login form for non-logged in users.', self::$text_domain ),
 					'tags'        => 'edd ecommerce downloads login users form',
 					'atts'        => array(
 						'redirect' => array(
-							'label'       => __( 'Redirect', 'Render_EDD' ),
-							'description' => __( 'Redirect to this page after login.', 'Render_EDD' ),
+							'label'       => __( 'Redirect', self::$text_domain ),
+							'description' => __( 'Redirect to this page after login.', self::$text_domain ),
 							'type'        => 'selectbox',
 							'properties'  => array(
 								'allowCustomInput' => true,
@@ -241,7 +281,7 @@ class Render_EDD {
 									'groups'   => true,
 									'function' => 'render_sc_post_list',
 								),
-								'placeholder'      => __( 'Same page', 'Render_EDD' ),
+								'placeholder'      => __( 'Same page', self::$text_domain ),
 							),
 						),
 					),
@@ -253,13 +293,13 @@ class Render_EDD {
 				array(
 					'code'        => 'edd_register',
 					'function'    => 'edd_register_form_shortcode',
-					'title'       => __( 'EDD Register', 'Render_EDD' ),
-					'description' => __( 'Displays a registration form for non-logged in users.', 'Render_EDD' ),
+					'title'       => __( 'EDD Register', self::$text_domain ),
+					'description' => __( 'Displays a registration form for non-logged in users.', self::$text_domain ),
 					'tags'        => 'edd ecommerce downloads login users form register signup',
 					'atts'        => array(
 						'redirect' => array(
-							'label'       => __( 'Redirect', 'Render_EDD' ),
-							'description' => __( 'Redirect to this page after login.', 'Render_EDD' ),
+							'label'       => __( 'Redirect', self::$text_domain ),
+							'description' => __( 'Redirect to this page after login.', self::$text_domain ),
 							'type'        => 'selectbox',
 							'properties'  => array(
 								'allowCustomInput' => true,
@@ -268,7 +308,7 @@ class Render_EDD {
 									'groups'   => true,
 									'function' => 'render_sc_post_list',
 								),
-								'placeholder'      => __( 'Same page', 'Render_EDD' ),
+								'placeholder'      => __( 'Same page', self::$text_domain ),
 							),
 						),
 					),
@@ -280,16 +320,16 @@ class Render_EDD {
 				array(
 					'code'        => 'edd_price',
 					'function'    => 'edd_download_price_shortcode',
-					'title'       => __( 'Download Price', 'Render_EDD' ),
-					'description' => __( 'Displays the price of a specific download.', 'Render_EDD' ),
+					'title'       => __( 'Download Price', self::$text_domain ),
+					'description' => __( 'Displays the price of a specific download.', self::$text_domain ),
 					'tags'        => 'edd ecommerce downloads product price',
 					'atts'        => array(
 						'id'       => render_edd_sc_attr_template( 'downloads', array(
 							'required' => true,
 						) ),
 						'price_id' => array(
-							'label'       => __( 'Price ID', 'Render_EDD' ),
-							'description' => __( 'Optional. For variable pricing.', 'Render_EDD' ),
+							'label'       => __( 'Price ID', self::$text_domain ),
+							'description' => __( 'Optional. For variable pricing.', self::$text_domain ),
 						),
 					),
 					'render'      => true,
@@ -298,53 +338,53 @@ class Render_EDD {
 				array(
 					'code'        => 'edd_receipt',
 					'function'    => 'edd_receipt_shortcode',
-					'title'       => __( 'Download Receipt', 'Render_EDD' ),
-					'description' => __( 'Displays a the complete details of a completed purchase.', 'Render_EDD' ),
+					'title'       => __( 'Download Receipt', self::$text_domain ),
+					'description' => __( 'Displays a the complete details of a completed purchase.', self::$text_domain ),
 					'tags'        => 'edd ecommerce downloads purchase receipt confirmation order payment complete checkout',
 					'atts'        => array(
 						'error'       => array(
-							'label'      => __( 'Error Message', 'Render_EDD' ),
+							'label'      => __( 'Error Message', self::$text_domain ),
 							'properties' => array(
 								'placeholder' => __( 'Sorry, trouble retrieving payment receipt.', 'edd' ),
 							),
 						),
 						'price'       => array(
-							'label'      => __( 'Hide Price', 'Render_EDD' ),
+							'label'      => __( 'Hide Price', self::$text_domain ),
 							'type'       => 'checkbox',
 							'properties' => array(
 								'value' => 0,
 							),
 						),
 						'discount'    => array(
-							'label'      => __( 'Hide Discounts', 'Render_EDD' ),
+							'label'      => __( 'Hide Discounts', self::$text_domain ),
 							'type'       => 'checkbox',
 							'properties' => array(
 								'value' => 0,
 							),
 						),
 						'products'    => array(
-							'label'      => __( 'Hide Products', 'Render_EDD' ),
+							'label'      => __( 'Hide Products', self::$text_domain ),
 							'type'       => 'checkbox',
 							'properties' => array(
 								'value' => 0,
 							),
 						),
 						'date'        => array(
-							'label'      => __( 'Hide Purchase Date', 'Render_EDD' ),
+							'label'      => __( 'Hide Purchase Date', self::$text_domain ),
 							'type'       => 'checkbox',
 							'properties' => array(
 								'value' => 0,
 							),
 						),
 						'payment_key' => array(
-							'label'      => __( 'Hide Payment Key', 'Render_EDD' ),
+							'label'      => __( 'Hide Payment Key', self::$text_domain ),
 							'type'       => 'checkbox',
 							'properties' => array(
 								'value' => 0,
 							),
 						),
 						'payment_id'  => array(
-							'label'      => __( 'Hide Order Number', 'Render_EDD' ),
+							'label'      => __( 'Hide Order Number', self::$text_domain ),
 							'type'       => 'checkbox',
 							'properties' => array(
 								'value' => 0,
@@ -359,79 +399,79 @@ class Render_EDD {
 				array(
 					'code'        => 'purchase_link',
 					'function'    => 'edd_download_shortcode',
-					'title'       => __( 'Download Purchase Link', 'Render_EDD' ),
-					'description' => __( 'Displays a button which adds a specific product to the cart.', 'Render_EDD' ),
+					'title'       => __( 'Download Purchase Link', self::$text_domain ),
+					'description' => __( 'Displays a button which adds a specific product to the cart.', self::$text_domain ),
 					'tags'        => 'edd ecommerce downloads purchase product buy button pay link checkout',
 					'atts'        => array(
 						'id'       => render_edd_sc_attr_template( 'downloads', array(
 							'required' => true,
 						) ),
 						'price'    => array(
-							'label'      => __( 'Hide Price', 'Render_EDD' ),
+							'label'      => __( 'Hide Price', self::$text_domain ),
 							'type'       => 'checkbox',
 							'properties' => array(
 								'value' => 0,
 							),
 						),
 						'text'     => array(
-							'label'      => __( 'Link Text', 'Render_EDD' ),
+							'label'      => __( 'Link Text', self::$text_domain ),
 							'properties' => array(
 								'placeholder' => isset( $edd_options['add_to_cart_text'] ) && $edd_options['add_to_cart_text'] != '' ? $edd_options['add_to_cart_text'] : __( 'Purchase', 'edd' ),
 							),
 						),
 						array(
 							'type'  => 'section_break',
-							'label' => __( 'Style', 'Render_EDD' ),
+							'label' => __( 'Style', self::$text_domain ),
 						),
 						'style'    => array(
-							'label'      => __( 'Style', 'Render_EDD' ),
+							'label'      => __( 'Style', self::$text_domain ),
 							'type'       => 'toggle',
 							'properties' => array(
 								'flip'   => isset( $edd_options['button_style'] ) && $edd_options['button_style'] == 'plain',
 								'values' => array(
-									'button' => __( 'Button', 'Render_EDD' ),
-									'plain'   => __( 'Text', 'Render_EDD' ),
+									'button' => __( 'Button', self::$text_domain ),
+									'plain'   => __( 'Text', self::$text_domain ),
 								),
 							),
 						),
 						'color'    => array(
-							'label'      => __( 'Button Color', 'Render_EDD' ),
+							'label'      => __( 'Button Color', self::$text_domain ),
 							'type'       => 'selectbox',
 							'default'    => isset( $edd_options['checkout_color'] ) ? $edd_options['checkout_color'] : 'blue',
 							'properties' => array(
 								'options' => array(
-									'white'     => __( 'White', 'Render_EDD' ),
-									'gray'      => __( 'Gray', 'Render_EDD' ),
-									'blue'      => __( 'Blue', 'Render_EDD' ),
-									'red'       => __( 'Red', 'Render_EDD' ),
-									'green'     => __( 'Green', 'Render_EDD' ),
-									'yellow'    => __( 'Yellow', 'Render_EDD' ),
-									'orange'    => __( 'Orange', 'Render_EDD' ),
-									'dark gray' => __( 'Dark gray', 'Render_EDD' ),
-									'inherit'   => __( 'Inherit', 'Render_EDD' ),
+									'white'     => __( 'White', self::$text_domain ),
+									'gray'      => __( 'Gray', self::$text_domain ),
+									'blue'      => __( 'Blue', self::$text_domain ),
+									'red'       => __( 'Red', self::$text_domain ),
+									'green'     => __( 'Green', self::$text_domain ),
+									'yellow'    => __( 'Yellow', self::$text_domain ),
+									'orange'    => __( 'Orange', self::$text_domain ),
+									'dark gray' => __( 'Dark gray', self::$text_domain ),
+									'inherit'   => __( 'Inherit', self::$text_domain ),
 								),
 							),
 						),
 						'sku'      => array(
-							'label'    => __( 'SKU', 'Render_EDD' ),
-							'description'    => __( 'Get download by SKU (overrides download set above)', 'Render_EDD' ),
+							'label'    => __( 'SKU', self::$text_domain ),
+							'description'    => __( 'Get download by SKU (overrides download set above)', self::$text_domain ),
 							'advanced' => true,
 						),
 						'direct'   => array(
-							'label'      => __( 'Direct Purchase', 'Render_EDD' ),
+							'label'      => __( 'Direct Purchase', self::$text_domain ),
 							'type'       => 'checkbox',
 							'properties' => array(
-								'label' => __( 'Send customer to directly to PayPal', 'Render_EDD' ),
+								'label' => __( 'Send customer to directly to PayPal', self::$text_domain ),
 							),
 							'advanced'   => true,
 						),
 						'class'    => array(
-							'label'    => __( 'CSS Class', 'Render_EDD' ),
+							'label'    => __( 'CSS Class', self::$text_domain ),
 							'default'  => 'edd-submit',
 							'advanced' => true,
 						),
 						'form_id'  => array(
-							'label'    => __( 'Form ID', 'Render_EDD' ),
+							'label'    => __( 'Form ID', self::$text_domain ),
 							'default'  => '',
 							'advanced' => true,
 						),
@@ -444,61 +484,61 @@ class Render_EDD {
 				array(
 					'code'        => 'purchase_collection',
 					'function'    => 'edd_purchase_collection_shortcode',
-					'title'       => __( 'Download Purchase Collection', 'Render_EDD' ),
-					'description' => __( 'Displays a button which adds all products in a specific taxonomy term to the cart.', 'Render_EDD' ),
+					'title'       => __( 'Download Purchase Collection', self::$text_domain ),
+					'description' => __( 'Displays a button which adds all products in a specific taxonomy term to the cart.', self::$text_domain ),
 					'tags'        => 'edd ecommerce downloads purchase product buy button pay link checkout',
 					'atts'        => array(
 						'taxonomy' => array(
-							'label'      => __( 'Taxonomy', 'Render_EDD' ),
+							'label'      => __( 'Taxonomy', self::$text_domain ),
 							'type'       => 'selectbox',
 							'required' => true,
 							'properties' => array(
 								'options' => array(
-									'download_category' => __( 'Category', 'Render_EDD' ),
-									'download_tag'      => __( 'Tag', 'Render_EDD' ),
+									'download_category' => __( 'Category', self::$text_domain ),
+									'download_tag'      => __( 'Tag', self::$text_domain ),
 								),
 							),
 						),
 						'terms'    => array(
-							'label'       => __( 'Terms', 'Render_EDD' ),
+							'label'       => __( 'Terms', self::$text_domain ),
 							'required' => true,
-							'description' => __( 'Enter a comma separated list of terms for the selected taxonomy.', 'Render_EDD' ),
+							'description' => __( 'Enter a comma separated list of terms for the selected taxonomy.', self::$text_domain ),
 						),
 						'text'     => array(
-							'label'   => __( 'Link Text', 'Render_EDD' ),
+							'label'   => __( 'Link Text', self::$text_domain ),
 							'default' => __( 'Purchase All Items', 'edd' ),
 						),
 						array(
 							'type'  => 'section_break',
-							'label' => __( 'Style', 'Render_EDD' ),
+							'label' => __( 'Style', self::$text_domain ),
 						),
 						'style'    => array(
-							'label'      => __( 'Style', 'Render_EDD' ),
+							'label'      => __( 'Style', self::$text_domain ),
 							'type'       => 'toggle',
 							'properties' => array(
 								'flip'   => isset( $edd_options['button_style'] ) && $edd_options['button_style'] == 'plain',
 								'values' => array(
-									'button' => __( 'Button', 'Render_EDD' ),
-									'plain'   => __( 'Text', 'Render_EDD' ),
+									'button' => __( 'Button', self::$text_domain ),
+									'plain'   => __( 'Text', self::$text_domain ),
 								),
 							),
 						),
 						'color'    => array(
-							'label'      => __( 'Button Color', 'Render_EDD' ),
+							'label'      => __( 'Button Color', self::$text_domain ),
 							'type'       => 'selectbox',
 							'default'    => isset( $edd_options['checkout_color'] ) ? $edd_options['checkout_color'] : 'blue',
 							'properties' => array(
 								'options' => array(
-									'gray'      => __( 'Gray', 'Render_EDD' ),
-									'blue'      => __( 'Blue', 'Render_EDD' ),
-									'green'     => __( 'Green', 'Render_EDD' ),
-									'dark gray' => __( 'Dark gray', 'Render_EDD' ),
-									'yellow'    => __( 'Yellow', 'Render_EDD' ),
+									'gray'      => __( 'Gray', self::$text_domain ),
+									'blue'      => __( 'Blue', self::$text_domain ),
+									'green'     => __( 'Green', self::$text_domain ),
+									'dark gray' => __( 'Dark gray', self::$text_domain ),
+									'yellow'    => __( 'Yellow', self::$text_domain ),
 								),
 							),
 						),
 						'class'    => array(
-							'label'    => __( 'CSS Class', 'Render_EDD' ),
+							'label'    => __( 'CSS Class', self::$text_domain ),
 							'default'  => 'edd-submit',
 							'advanced' => true,
 						),
@@ -511,19 +551,19 @@ class Render_EDD {
 				array(
 					'code'        => 'downloads',
 					'function'    => 'edd_downloads_query',
-					'title'       => __( 'Downloads', 'Render_EDD' ),
-					'description' => __( 'Outputs a list or grid of downloadable products.', 'Render_EDD' ),
+					'title'       => __( 'Downloads', self::$text_domain ),
+					'description' => __( 'Outputs a list or grid of downloadable products.', self::$text_domain ),
 					'tags'        => 'edd ecommerce downloads purchase product list',
 					'atts'        => array(
 						array(
 							'type'  => 'section_break',
-							'label' => __( 'Downloads', 'Render_EDD' ),
+							'label' => __( 'Downloads', self::$text_domain ),
 						),
 						'category'         => array(
-							'label'      => __( 'Categories', 'Render_EDD' ),
+							'label'      => __( 'Categories', self::$text_domain ),
 							'type'       => 'selectbox',
 							'properties' => array(
-								'placeholder' => __( 'Download category', 'Render_EDD' ),
+								'placeholder' => __( 'Download category', self::$text_domain ),
 								'multi'       => true,
 								'callback'    => array(
 									'function' => 'render_edd_get_categories',
@@ -531,10 +571,10 @@ class Render_EDD {
 							),
 						),
 						'tags'             => array(
-							'label'      => __( 'Tags', 'Render_EDD' ),
+							'label'      => __( 'Tags', self::$text_domain ),
 							'type'       => 'selectbox',
 							'properties' => array(
-								'placeholder' => __( 'Download tag', 'Render_EDD' ),
+								'placeholder' => __( 'Download tag', self::$text_domain ),
 								'multi'       => true,
 								'callback'    => array(
 									'function' => 'render_edd_get_tags',
@@ -542,21 +582,21 @@ class Render_EDD {
 							),
 						),
 						'relation'         => array(
-							'label'       => __( 'Relation', 'Render_EDD' ),
-							'description' => __( 'Downloads must be in ALL categories / tags, or at least just one.', 'Render_EDD' ),
+							'label'       => __( 'Relation', self::$text_domain ),
+							'description' => __( 'Downloads must be in ALL categories / tags, or at least just one.', self::$text_domain ),
 							'type'        => 'toggle',
 							'properties'  => array(
 								'values' => array(
-									'AND' => __( 'All', 'Render_EDD' ) . '&nbsp;', // For spacing in the toggle switch
-									'OR'  => __( 'One', 'Render_EDD' ),
+									'AND' => __( 'All', self::$text_domain ) . '&nbsp;', // For spacing in the toggle switch
+									'OR'  => __( 'One', self::$text_domain ),
 								),
 							),
 						),
 						'exclude_category' => array(
-							'label'      => __( 'Exclude Categories', 'Render_EDD' ),
+							'label'      => __( 'Exclude Categories', self::$text_domain ),
 							'type'       => 'selectbox',
 							'properties' => array(
-								'placeholder' => __( 'Download category', 'Render_EDD' ),
+								'placeholder' => __( 'Download category', self::$text_domain ),
 								'multi'       => true,
 								'callback'    => array(
 									'function' => 'render_edd_get_categories',
@@ -564,10 +604,10 @@ class Render_EDD {
 							),
 						),
 						'exclude_tags'     => array(
-							'label'      => __( 'Exclude Tags', 'Render_EDD' ),
+							'label'      => __( 'Exclude Tags', self::$text_domain ),
 							'type'       => 'selectbox',
 							'properties' => array(
-								'placeholder' => __( 'Download tag', 'Render_EDD' ),
+								'placeholder' => __( 'Download tag', self::$text_domain ),
 								'multi'       => true,
 								'callback'    => array(
 									'function' => 'render_edd_get_tags',
@@ -575,7 +615,7 @@ class Render_EDD {
 							),
 						),
 						'number'           => array(
-							'label'      => __( 'Download Count', 'Render_EDD' ),
+							'label'      => __( 'Download Count', self::$text_domain ),
 							'type'       => 'counter',
 							'default'    => 9,
 							'properties' => array(
@@ -586,100 +626,100 @@ class Render_EDD {
 						'ids'              => render_edd_sc_attr_template(
 							'downloads',
 							array(
-								'label'       => __( 'Downloads', 'Render_EDD' ),
-								'description' => __( 'Enter one or more downloads to use ONLY these downloads.', 'Render_EDD' ),
+								'label'       => __( 'Downloads', self::$text_domain ),
+								'description' => __( 'Enter one or more downloads to use ONLY these downloads.', self::$text_domain ),
 							), array(
 								'multi' => true,
 							)
 						),
 						'orderby'          => array(
-							'label'      => __( 'Order By', 'Render_EDD' ),
+							'label'      => __( 'Order By', self::$text_domain ),
 							'type'       => 'selectbox',
 							'default'    => 'post_date',
 							'properties' => array(
 								'options' => array(
-									'price'     => __( 'Price', 'Render_EDD' ),
-									'id'        => __( 'ID', 'Render_EDD' ),
-									'random'    => __( 'Random', 'Render_EDD' ),
-									'post_date' => __( 'Published date', 'Render_EDD' ),
-									'title'     => __( 'Title', 'Render_EDD' ),
+									'price'     => __( 'Price', self::$text_domain ),
+									'id'        => __( 'ID', self::$text_domain ),
+									'random'    => __( 'Random', self::$text_domain ),
+									'post_date' => __( 'Published date', self::$text_domain ),
+									'title'     => __( 'Title', self::$text_domain ),
 								),
 							),
 						),
 						'order'            => array(
-							'label'      => __( 'Order', 'Render_EDD' ),
+							'label'      => __( 'Order', self::$text_domain ),
 							'type'       => 'toggle',
 							'properties' => array(
 								'values' => array(
-									'DESC' => __( 'Descending', 'Render_EDD' ),
-									'ASC'  => __( 'Ascending', 'Render_EDD' ),
+									'DESC' => __( 'Descending', self::$text_domain ),
+									'ASC'  => __( 'Ascending', self::$text_domain ),
 								),
 							),
 						),
 						array(
 							'type'  => 'section_break',
-							'label' => __( 'Visibility', 'Render_EDD' ),
+							'label' => __( 'Visibility', self::$text_domain ),
 						),
 						'price'            => array(
-							'label'      => __( 'Price', 'Render_EDD' ),
+							'label'      => __( 'Price', self::$text_domain ),
 							'type'       => 'toggle',
 							'properties' => array(
 								'deselectStyle' => true,
 								'values'        => array(
-									'no'  => __( 'Hide', 'Render_EDD' ),
-									'yes' => __( 'Show', 'Render_EDD' ),
+									'no'  => __( 'Hide', self::$text_domain ),
+									'yes' => __( 'Show', self::$text_domain ),
 								),
 							),
 						),
 						'excerpt'          => array(
-							'label'      => __( 'Excerpt', 'Render_EDD' ),
+							'label'      => __( 'Excerpt', self::$text_domain ),
 							'type'       => 'toggle',
 							'properties' => array(
 								'flip'          => true,
 								'deselectStyle' => true,
 								'values'        => array(
-									'no'  => __( 'Hide', 'Render_EDD' ),
-									'yes' => __( 'Show', 'Render_EDD' ),
+									'no'  => __( 'Hide', self::$text_domain ),
+									'yes' => __( 'Show', self::$text_domain ),
 								),
 							),
 						),
 						'full_content'     => array(
-							'label'      => __( 'Full Content', 'Render_EDD' ),
+							'label'      => __( 'Full Content', self::$text_domain ),
 							'type'       => 'toggle',
 							'properties' => array(
 								'deselectStyle' => true,
 								'values'        => array(
-									'no'  => __( 'Hide', 'Render_EDD' ),
-									'yes' => __( 'Show', 'Render_EDD' ),
+									'no'  => __( 'Hide', self::$text_domain ),
+									'yes' => __( 'Show', self::$text_domain ),
 								),
 							),
 						),
 						'buy_button'       => array(
-							'label'      => __( 'Buy Button', 'Render_EDD' ),
+							'label'      => __( 'Buy Button', self::$text_domain ),
 							'type'       => 'toggle',
 							'properties' => array(
 								'flip'          => true,
 								'deselectStyle' => true,
 								'values'        => array(
-									'no'  => __( 'Hide', 'Render_EDD' ),
-									'yes' => __( 'Show', 'Render_EDD' ),
+									'no'  => __( 'Hide', self::$text_domain ),
+									'yes' => __( 'Show', self::$text_domain ),
 								),
 							),
 						),
 						'thumbnails'       => array(
-							'label'      => __( 'Thumbnails', 'Render_EDD' ),
+							'label'      => __( 'Thumbnails', self::$text_domain ),
 							'type'       => 'toggle',
 							'properties' => array(
 								'flip'          => true,
 								'deselectStyle' => true,
 								'values'        => array(
-									'false' => __( 'Hide', 'Render_EDD' ),
-									'true'  => __( 'Show', 'Render_EDD' ),
+									'false' => __( 'Hide', self::$text_domain ),
+									'true'  => __( 'Show', self::$text_domain ),
 								),
 							),
 						),
 						'columns'          => array(
-							'label'      => __( 'Columns', 'Render_EDD' ),
+							'label'      => __( 'Columns', self::$text_domain ),
 							'type'       => 'counter',
 							'default'    => 3,
 							'properties' => array(
@@ -701,7 +741,7 @@ class Render_EDD {
 			render_add_shortcode( $shortcode );
 			render_add_shortcode_category( array(
 				'id'    => 'ecommerce',
-				'label' => __( 'Ecommerce', 'Render_EDD' ),
+				'label' => __( 'Ecommerce', self::$text_domain ),
 				'icon'  => 'dashicons-cart',
 			) );
 		}
@@ -712,19 +752,21 @@ class Render_EDD {
 	 *
 	 * @since 0.1.0
 	 */
-	static function notice() {
+	public function notice() {
+		?>
 		?>
 		<div class="error">
 			<p>
-				<?php
-				printf(
-					__( 'You have activated a plugin that requires %s and %s. Please install and activate both to continue using Render EDD.', 'Render_EDD' ),
-					'<a href="http://renderwp.com/?utm_source=Render%20EDD&utm_medium=Notice&utm_campaign=Render%20EDD%20Notice
-">Render</a>',
-					'<a href="http://easydigitaldownloads.com/?utm_source=Render%20EDD&utm_medium=Notice&utm_campaign=Render%20EDD%20Notice">Easy Digital Downloads</a>'
-				);
-				?>
+				<?php _e( 'Render Easy Digital Downloads is not active due to the following errors:', self::$text_domain ); ?>
 			</p>
+
+			<ul>
+				<?php foreach ( $this->deactivate_reasons as $reason ) : ?>
+					<li>
+						<?php echo "&bull; $reason"; ?>
+					</li>
+				<?php endforeach; ?>
+			</ul>
 		</div>
 	<?php
 	}
