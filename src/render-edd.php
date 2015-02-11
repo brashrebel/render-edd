@@ -86,7 +86,7 @@ class Render_EDD {
 		}
 
 		// 1.0.3 is when extension integration was introduced
-		if ( defined( 'RENDER_VERSION' ) && version_compare( RENDER_VERSION, '1.0.0', '<' ) ) {
+		if ( defined( 'RENDER_VERSION' ) && version_compare( RENDER_VERSION, '1.0.3', '<' ) ) {
 			$this->deactivate_reasons[] = sprintf(
 				__( 'This plugin requires at least Render version %s. You have version %s installed.', self::$text_domain ),
 				'1.0.3',
