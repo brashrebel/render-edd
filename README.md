@@ -1,4 +1,5 @@
 # Render EDD
+### v1.0.0
 
 Love Easy Digital Downloads? So do we. EDD is a powerful plugin which allows you to easily sell digital products
 through WordPress.
@@ -32,3 +33,8 @@ Here's a basic rundown of what this plugin does so that you'll know what to look
 * Creates easy to use input fields for all available shortcode parameters
 * Generates a live preview in the editor of all EDD shortcodes
 * Includes all EDD shortcodes in the Render widget so they can be added to sidebars
+
+## Changelog
+
+### [1.0.0](https://github.com/brashrebel/render-edd/releases/tag/v1.0.0)
+* RELEASE: The initial release!
