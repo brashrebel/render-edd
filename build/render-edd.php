@@ -89,7 +89,7 @@ class Render_EDD {
 			$this->deactivate_reasons[] = __( 'Render is not active', self::$text_domain );
 		}
 
-		// Requires Project Panorama
+		// Requires Easy Digital Downloads
 		if ( ! class_exists( 'Easy_Digital_Downloads' ) ) {
 			$this->deactivate_reasons[] = __( 'Easy Digital Downloads is not active', self::$text_domain );
 		}
