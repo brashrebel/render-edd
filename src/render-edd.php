@@ -116,7 +116,7 @@ class Render_EDD {
 			'render_edd',
 			'Easy Digital Downloads',
 			RENDER_EDD_VERSION,
-			defined( 'RENDER_DEVELOPMENT' ) ? 'render-easy-digital-downloads-development/init.php' : __FILE__
+			defined( 'RENDER_DEVELOPMENT' ) ? 'render-edd-development/init.php' : __FILE__
 		);
 
 		// Remove media button
