@@ -112,7 +112,12 @@ class Render_EDD {
 		add_filter( 'render_editor_styles', array( __CLASS__, '_add_render_edd_style' ) );
 
 		// Licensing
-		render_setup_license( 'render_edd', 'Easy Digital Downloads', RENDER_EDD_VERSION, __FILE__ );
+		render_setup_license(
+			'render_edd',
+			'Easy Digital Downloads',
+			RENDER_EDD_VERSION,
+			defined( 'RENDER_DEVELOPMENT' ) ? 'render-easy-digital-downloads-development/init.php' : __FILE__
+		);
 
 		// Remove media button
 		render_disable_tinymce_media_button( 'edd_media_button', 'Insert Download', 11 );
